@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">FPlayer</string>
+    <!--<string name="url1">http://vfx.mtime.cn/Video/2019/03/14/mp4/190314223540373995.mp4</string>-->
+    <!--<string name="url1">http://cctvalih5ca.v.myalicdn.com/live/cctv1_2/index.m3u8</string>-->
+    <!--<string name="url1">https://media.w3.org/2010/05/sintel/trailer.mp4</string>-->
+    <!--<string name="url1">http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4</string>-->
+    <!--<string name="url1">http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4</string>-->
+    <!-- <string name="url1">rtsp://123.147.113.36:554/04000001/30000001000000020000000001005289?AuthInfo=xxx</string>-->
+    <!--<string name="url1">http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8</string>-->
+    <!--<string name="url1">http://video11.cdn.ott.cbg.cn/605ff870aadb07f27312809c9f336411/5EFBF9F4/Data/2020-03-13/file_68c2df26-25c1-4c21-a9dd-b02d80d96c18/playlist.m3u8</string>-->
+    <!--<string name="url1">http://183.230.166.58:8081/live/hls/150/index.m3u8</string>-->
+    <!--<string name="url1">http://video11.cdn.ott.cbg.cn/1d3349bd019c60000af54fd4dfcba7cc/619483B7/Data/2020-08-10/file_d518f3ed-e01a-4edf-9ec4-9e322e1b3641/playlist.m3u8</string>-->
+    <string name="url1">rtsp://123.147.112.17:8089/04000001/30080001000000280000000002705729?AuthInfo=xxx</string>
+</resources>

@@ -1,0 +1,283 @@
+
+su root
+Zyl123456
+
+
+查看所有编译配置选项：./configure --help
+查看支持的解码器：./configure --list-decoders
+查看支持的编码器：./configure --list-encoders
+查看支持的硬件加速：./configure --list-hwaccels
+
+wget https://ffmpeg.org/releases/ffmpeg-4.2.4.tar.gz --no-check-certificate
+wget https://ffmpeg.org/releases/ffmpeg-4.2.1.tar.gz --no-check-certificate
+
+#!/bin/bash
+make clean
+export NDK=/home/zyl/ndk/android-ndk-r21d
+TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
+API=19
+function build_android
+{
+./configure \
+--prefix=$PREFIX \
+--enable-neon \
+--enable-hwaccels \
+--enable-gpl \
+--enable-postproc \
+--enable-shared \
+--enable-jni \
+--enable-mediacodec \
+--enable-decoder=h264_mediacodec \
+#--enable-openssl \
+--enable-protocols \
+--enable-protocol=https \
+--enable-nonfree \
+--enable-gnutls \
+--enable-securetransport \
+--enable-libx264 \
+--enable-encoder=libx264 \
+--enable-parser=h264 \
+--enable-encoder=h264 \
+--enable-decoder=h264 \
+--enable-muxer=h264 \
+--enable-demuxer=h264 \
+--disable-static \
+--disable-ffmpeg \
+--disable-ffplay \
+--disable-ffprobe \
+--disable-avdevice \
+--disable-symver \
+--disable-x86asm \
+--disable-armv5te \
+--disable-armv6 \
+--disable-armv6t2 \
+--cross-prefix=$CROSS_PREFIX \
+--target-os=android \
+--arch=$ARCH \
+--cpu=$CPU \
+--cc=$CC \
+--cxx=$CXX \
+--enable-cross-compile \
+--sysroot=$SYSROOT \
+--extra-cflags="-I/usr/local/include -fPIE -pie" \
+--extra-ldflags="-L/usr/local/lib" \
+--extra-cflags="-Os -fpic $OPTIMIZE_CFLAGS"
+
+make clean
+make -j8
+make install
+}
+
+ARCH=arm
+CPU=armv7-a
+PREFIX=$(pwd)/android/$CPU
+SYSROOT=$TOOLCHAIN/sysroot
+CC=$TOOLCHAIN/bin/armv7a-linux-androideabi$API-clang
+CXX=$TOOLCHAIN/bin/armv7a-linux-androideabi$API-clang++
+CROSS_PREFIX=$TOOLCHAIN/bin/arm-linux-androideabi-
+OPTIMIZE_CFLAGS=" -mfloat-abi=softfp -mfpu=vfp -marm -march=$CPU"
+build_android
+
+#ARCH=arm64
+#PREFIX=$(pwd)/android/$CPU
+#SYSROOT=$TOOLCHAIN/sysroot
+#CC=$TOOLCHAIN/bin/aarch64-linux-android$API-clang
+#CXX=$TOOLCHAIN/bin/aarch64-linux-android$API-clang++
+#CROSS_PREFIX=$TOOLCHAIN/bin/aarch64-linux-android-
+#OPTIMIZE_CFLAGS="-march=$CPU"
+#build_android
+
+
+######################success start 4.2.1 https://www.jianshu.com/p/212c61cac89c #################
+
+wget https://ffmpeg.org/releases/ffmpeg-4.2.2.tar.gz --no-check-certificate
+wget https://ffmpeg.org/releases/ffmpeg-4.0.3.tar.gz --no-check-certificate
+wget https://dl.google.com/android/repository/android-ndk-r17c-linux-x86_64.zip --no-check-certificate
+
+#将help信息输出到文本中便于查看
+$ ./configure --help > ffmpeg_configure_help.txt
+#发送到windows端查看更happy
+$ sz ffmpeg_configure_help.txt
+
+
+SLIBNAME_WITH_MAJOR='$(SLIBNAME).$(LIBMAJOR)'
+LIB_INSTALL_EXTRA_CMD='$$(RANLIB) "$(LIBDIR)/$(LIBNAME)"'
+SLIB_INSTALL_NAME='$(SLIBNAME_WITH_VERSION)'
+SLIB_INSTALL_LINKS='$(SLIBNAME_WITH_MAJOR) $(SLIBNAME)'
+更改成
+SLIBNAME_WITH_MAJOR='$(SLIBPREF)$(FULLNAME)-$(LIBMAJOR)$(SLIBSUF)'
+LIB_INSTALL_EXTRA_CMD='$$(RANLIB)"$(LIBDIR)/$(LIBNAME)"'
+SLIB_INSTALL_NAME='$(SLIBNAME_WITH_MAJOR)'
+SLIB_INSTALL_LINKS='$(SLIBNAME)'
+
+注释4210-4213行，简单粗暴：
+4209 
+4210 #set_default target_os
+4211 #if test "$target_os" = android; then
+4212 #   cc_default="clang"
+4213 #fi
+4214 
+
+
+#!/bin/bash
+#NDK_ROOT 变量指向ndk目录
+NDK_ROOT=/home/zyl/ndk/android-ndk-r17c
+#TOOLCHAIN 变量指向ndk中的交叉编译gcc所在的目录
+TOOLCHAIN=$NDK_ROOT/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64
+
+#指定android api版本
+ANDROID_API=17
+
+#此变量用于编译完成之后的库与头文件存放在哪个目录
+#PREFIX=./android/armeabi-v7a
+PREFIX=/mnt/d/FFmpeg/android/armeabi-v7a
+
+#执行configure脚本，用于生成makefile
+#--prefix : 安装目录
+#--enable-small : 优化大小
+#--disable-programs : 不编译ffmpeg程序(命令行工具)，我们是需要获得静态(动态)库。
+#--disable-avdevice : 关闭avdevice模块，此模块在android中无用
+#--disable-encoders : 关闭所有编码器 (播放不需要编码)
+#--disable-muxers :  关闭所有复用器(封装器)，不需要生成mp4这样的文件，所以关闭
+#--disable-filters :关闭视频滤镜
+#--enable-cross-compile : 开启交叉编译
+#--cross-prefix: gcc的前缀 xxx/xxx/xxx-gcc 则给xxx/xxx/xxx-
+#disable-shared enable-static 不写也可以，默认就是这样的。
+#--sysroot: 
+#--extra-cflags: 会传给gcc的参数
+#--arch --target-os : 必须要给
+./configure \
+--prefix=$PREFIX \
+--enable-small \
+--enable-shared \
+--disable-static \
+--disable-programs \
+--disable-avdevice \
+--disable-encoders \
+--disable-muxers \
+--disable-filters \
+--enable-cross-compile \
+--cross-prefix=$TOOLCHAIN/bin/arm-linux-androideabi- \
+--sysroot=$NDK_ROOT/platforms/android-$ANDROID_API/arch-arm \
+--extra-cflags="-isysroot $NDK_ROOT/sysroot -isystem $NDK_ROOT/sysroot/usr/include/arm-linux-androideabi -D__ANDROID_API__=$ANDROID_API -U_FILE_OFFSET_BITS  -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb -Wa,--noexecstack -Wformat -Werror=format-security  -O0 -fPIC" \
+--arch=arm \
+--target-os=android
+
+#上面运行脚本生成makefile之后，使用make执行脚本
+make clean
+make -j8
+make install
+
+#######################4.2.1 r17c################
+
+
+
+#播放相关
+https://blog.csdn.net/qq_52703909/article/details/123803849
+https://blog.csdn.net/m0_61745661/article/details/124218248
+https://blog.51cto.com/u_14202100/5084454
+http://wjhsh.net/zsychanpin-p-6840491.html
+https://blog.csdn.net/qq_25909453/article/details/119900388?spm=1001.2014.3001.5502
+https://blog.csdn.net/weixin_34242819/article/details/88024861
+https://blog.csdn.net/wangchao1412/article/details/103455046
+https://github.com/wangchao0837/FFmpegPlayer
+注册所有的组件  av_register_all()
+打开视频文件  avformat_open_input()  有可能打开失败
+获取视频信息 视频码流、音频码流、文字码流
+查找流信息  avformat_find_stream_info()
+找到解码器  avcodec_find_decoder()  有可能没找到
+打开解码器  avcodec_open2()
+读取码流中的一帧码流数据  av_read_frame()
+解码读到一帧码流数据 得到一帧的像素数据  YUV RGB
+重复7-8的动作 直到视频所有的帧都处理完
+关闭解码器
+关闭视频文件
+
+1 . 帧率 ( FPS ) : 单位时间内 ( 1 秒 ) , 需要显示的图像个数 , 单位是 Hz ;
+① 帧率不固定 : 这里要特别注意 , FFMPEG 在播放视频过程中 , 视频的帧率不是固定的 , 中途可能改变 ;
+② 视频卡顿问题 : 如果视频播放过程中出现了卡顿 , 是因为没有控制好播放的帧率 ;
+3 . 视频帧率获取 : 视频帧率信息封装在音视频流 AVStream 结构体中 , 通过访问 stream->avg_frame_rate
+结构体元素 , 即可获取帧率 , 每秒播放的帧数 ;
+
+rtsp
+
+export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-protocol=rtp"
+export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-protocol=tcp"
+export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-demuxer=rtsp"
+export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-demuxer=sdp"
+export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-demuxer=rtp"
+
+
+/*添加*/
+ic->max_analyze_duration = 60 * AV_TIME_BASE;
+ic->probesize = 1024000;
+
+--disable-demuxers
+--enable-demuxer=rtsp
+--enable-demuxer=sdp
+
+openssl
+https://blog.csdn.net/shangsongwww/article/details/88708959?utm_term=android%E4%BD%BF%E7%94%A8%20openssl&utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~sobaiduweb~default-0-88708959-null-null&spm=3001.4430
+wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz --no-check-certificate
+
+ffmpeg 配置说明
+https://www.e-learn.cn/topic/3588410
+
+https://www.jianshu.com/p/5e2fd2e51534
+
+https://cloud.tencent.com/developer/article/1746511
+
+2022年8月8日14:56:21
+https://gitee.com/jeffmony/AndroidFFmpegCompile
+
+
+
+4.0.3
+https://cloud.tencent.com/developer/article/1746511
+
+
+•可用的bit流 ：ffmpeg –bsfs
+•可用的编解码器：ffmpeg –codecs
+•可用的解码器：ffmpeg –decoders
+•可用的编码器：ffmpeg –encoders
+•可用的过滤器：ffmpeg –filters
+•可用的视频格式：ffmpeg –formats
+•可用的声道布局：ffmpeg –layouts
+•可用的license：ffmpeg –L
+•可用的像素格式：ffmpeg –pix_fmts
+•可用的协议：ffmpeg --protocols
+
+https://www.jianshu.com/p/edbebd15326e --enable-demuxer=rtsp
+
+h264硬解
+https://blog.51cto.com/u_15375308/4966310
+
+
+完成后复制
+cp -r /mnt/e/FFmpeg/android/include/lib* /mnt/d/Android/UT/demo/FFmpegPlayer/app/src/main/cpp/include/
+cp -r /mnt/e/FFmpeg/android/lib/lib* /mnt/d/Android/UT/demo/FFmpegPlayer/app/src/main/jniLibs/armeabi-v7a/
+
+免费视频
+https://ke.qq.com/course/3202131/11356202771471443?flowToken=1042495#term_id=103329919
+
+vlc 编译 https://www.jianshu.com/p/ead0e2f42f3d
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

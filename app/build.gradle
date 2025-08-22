@@ -1,0 +1,125 @@
+import java.text.SimpleDateFormat
+
+apply plugin: 'com.android.application'
+
+def keystorePropertiesFile = rootProject.file("E:\\Android\\ut_common_keystore\\keystore.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+android {
+    compileSdkVersion 29
+
+    defaultConfig {
+        applicationId "com.z.player"
+        minSdkVersion 19
+        //noinspection ExpiredTargetSdkVersion
+        targetSdkVersion  29
+        versionCode 100
+        versionName "1.0.0"
+
+        sourceSets {
+            main {
+                jniLibs.srcDirs = ['jniLibs']
+            }
+        }
+
+        /*sourceSets {
+            main {
+                jniLibs.srcDirs = ['libs']
+            }
+        }*/
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11 -frtti -fexceptions"
+                abiFilters 'armeabi-v7a'
+            }
+        }
+
+        ndk {
+            abiFilters 'armeabi-v7a'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
+            version '3.18.1'
+        }
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+
+        release {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
+
+    buildTypes {
+        /*debug {
+            ndk {
+                debuggable true//addr2line
+            }
+
+            zipAlignEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }*/
+
+        release {
+            //zipAlignEnabled true
+            /*zipAlignEnabled true
+            minifyEnabled true
+            shrinkResources true*/
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    /*repositories {
+        flatDir {
+            dirs 'libs'
+        }
+    }*/
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    //noinspection GradleCompatible
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    //noinspection GradleCompatible
+    implementation 'com.android.support:recyclerview-v7:28.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.0'
+    implementation 'com.squareup.okio:okio:2.4.3'
+    implementation 'com.alibaba:fastjson:1.2.75'
+    implementation 'com.gyf.immersionbar:immersionbar:3.0.0'
+    implementation 'com.zhy:okhttputils:2.6.2'
+    implementation 'org.litepal.android:java:3.0.0'
+    implementation 'me.jessyan:autosize:1.2.1'
+    implementation 'org.videolan.android:libvlc-all:3.5.1'
+}
+
+android.applicationVariants.all {
+    variant ->
+        variant.outputs.all {
+            def buildName = variant.name.toLowerCase()
+            def versionName = variant.versionName
+            def time = new SimpleDateFormat("yyyyMMddHHmmss", Locale.CHINESE).format(new Date())
+
+            outputFileName = "ffcplay_" + buildName + "_" + versionName + "_" + time + ".apk"
+        }
+}
