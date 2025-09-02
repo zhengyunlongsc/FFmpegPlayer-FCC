@@ -19,10 +19,10 @@ AudioChannel::AudioChannel(int stream_index, AVCodecContext *av_codec_context, A
     out_sample_size = av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
     out_sample_rate = 44100;//44100个16位 44100 * 2,44100*(双声道)*(16位)
 
-    //LOGE("audio-channel-cpp tag 0-0 channels=%d,sample_size=%d,sample_rate=%d", out_channels, out_sample_size, out_sample_rate);
+    LOGE("audio-channel-cpp tag 0-0 channels=%d,sample_size=%d,sample_rate=%d", out_channels, out_sample_size, out_sample_rate);
 
     size_t size = out_sample_rate * out_channels * out_sample_size;
-    //LOGE("audio-channel-cpp tag 0-1 size=%d", size);
+    LOGE("audio-channel-cpp tag 0-1 size=%d", size);
     out_buffer = static_cast<uint8_t *>(av_malloc(size));
     memset(out_buffer, 0, size);
 
@@ -30,21 +30,21 @@ AudioChannel::AudioChannel(int stream_index, AVCodecContext *av_codec_context, A
     AVSampleFormat in_sample_fmt = av_codec_context->sample_fmt;
     int in_sample_rate = av_codec_context->sample_rate;
 
-    //LOGE("audio-channel-cpp tag 0-2 channels=%llu,ch_layout=%d,sample_rate=%d", in_ch_layout, in_sample_fmt, in_sample_rate);
+    LOGE("audio-channel-cpp tag 0-2 channels=%llu,ch_layout=%d,sample_rate=%d", in_ch_layout, in_sample_fmt, in_sample_rate);
 
     swr_alloc_set_opts(swr_context, AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16, out_sample_rate,
                        in_ch_layout, in_sample_fmt, in_sample_rate, 0, nullptr);
     int ret = swr_init(swr_context);    //初始化
-    //LOGE("audio-channel-cpp tag 0-3 swr_init ret=%d", ret);
+    LOGE("audio-channel-cpp tag 0-3 swr_init ret=%d", ret);
     if (ret < 0) {
-        //LOGE("audio-channel-cpp tag 0-3-1: %s", av_err2str(ret));
+        LOGE("audio-channel-cpp tag 0-3-1: %s", av_err2str(ret));
     }
 
     init_open_sl();
 }
 
 AudioChannel::~AudioChannel() {
-    //LOGE("audio-channel-cpp destroy tag 0");
+    LOGE("audio-channel-cpp destroy tag 0");
     shutdown_open_sl();
     if (swr_context) {
         swr_free(&swr_context);
@@ -55,11 +55,11 @@ AudioChannel::~AudioChannel() {
         free(out_buffer);
         out_buffer = nullptr;
     }
-    //LOGE("audio-channel-cpp destroy tag 0-end");
+    LOGE("audio-channel-cpp destroy tag 0-end");
 }
 
 size_t AudioChannel::get_pcm() {
-    //LOGE("audio-channel-cpp get_pcm tag 0-0-0 v_diff=%f", ren_def_diff);
+    LOGE("audio-channel-cpp get_pcm tag 0-0-0");
     AVFrame *frame = nullptr;
     while (is_playing) {
         int ret = frames.pop(frame);
@@ -70,23 +70,33 @@ size_t AudioChannel::get_pcm() {
 
         this->pts_second = static_cast<double>(frame->pts) * av_q2d(av_rational);
         if (ren_def_diff == 0) {
-            ren_def_diff = getSysDiff(this->pts_second);
-            //LOGE("audio-channel-cpp get_pcm tag 0-0 v_diff=%f", ren_def_diff);
+            if (video_channel->ren_def_diff == 0) {
+                releaseFrame(&frame);
+                continue;
+            }
+            ren_def_diff = video_channel->ren_def_diff;
         }
 
         a_clock_diff = ren_def_diff - getSysDiff(this->pts_second);
         double v_a_diff = video_channel->v_clock_diff - a_clock_diff;
 
-        //LOGE("audio-channel-cpp render tag 0-1 v_diff=%f a_diff=%f v_a_diff=%f play_second=%d", video_channel->v_clock_diff, a_clock_diff, v_a_diff,
-             //play_second);
+        LOGE("audio-channel-cpp render tag 0-1 v_diff=%f a_diff=%f v_a_diff=%f play_second=%d",
+             video_channel->v_clock_diff, a_clock_diff, v_a_diff, play_second);
+
+        unsigned int sleep_us = static_cast<unsigned int>(a_clock_diff * 500000);
 
         if (a_clock_diff < -0.1) {
-            //LOGE("audio-channel-cpp get_pcm a_diff=%f packets.size=%d", a_clock_diff, packets.size());
+            LOGE("audio-channel-cpp get_pcm a_diff=%f packets.size=%d", a_clock_diff, packets.size());
             releaseFrame(&frame);
             continue;
+        } else if (a_clock_diff > 0.1) {
+            LOGE("audio-channel-cpp get_pcm tag 0-2-1 drop sleep=%u", sleep_us);
+            releaseFrame(&frame);
+            av_usleep(sleep_us);
+            continue;
         } else if (a_clock_diff > 0) {
-            //LOGE("audio-channel-cpp get_pcm tag 0-2 sleep...");
-            av_usleep(a_clock_diff * 1000000);
+            LOGE("audio-channel-cpp get_pcm tag 0-2 sleep=%u", sleep_us);
+            av_usleep(sleep_us);
         }
 
         int64_t delays = swr_get_delay(swr_context, frame->sample_rate);
@@ -113,7 +123,7 @@ void AudioChannel::setVideoChannel(VideoChannel *video) {
 }
 
 void AudioChannel::render() {
-    //LOGE("audio-channel-cpp render tag 0");
+    LOGE("audio-channel-cpp render tag 0");
     bufferQueueCallback(buffer_queue, this);
 }
 
@@ -131,7 +141,7 @@ void AudioChannel::stop() {
 }
 
 void AudioChannel::sync() {
-    //LOGE("audio-channel-cpp sync tag 0-0");
+    LOGE("audio-channel-cpp sync tag 0-0");
 }
 
 void AudioChannel::init_open_sl() {
@@ -171,21 +181,21 @@ void AudioChannel::init_open_sl() {
 }
 
 void AudioChannel::shutdown_open_sl() {
-    //LOGE("audio-channel-cpp shutdown_open_sl tag 1");
+    LOGE("audio-channel-cpp shutdown_open_sl tag 1");
 
     if (player_object) {
         (*player_object)->Destroy(player_object);
     }
 
-    //LOGE("audio-channel-cpp shutdown_open_sl tag 2");
+    LOGE("audio-channel-cpp shutdown_open_sl tag 2");
     if (output_mix_object) {
         (*output_mix_object)->Destroy(output_mix_object);
     }
 
-    //LOGE("audio-channel-cpp shutdown_open_sl tag 3");
+    LOGE("audio-channel-cpp shutdown_open_sl tag 3");
     if (engine_object) {
         (*engine_object)->Destroy(engine_object);
     }
 
-    //LOGE("audio-channel-cpp shutdown_open_sl tag 4-end");
+    LOGE("audio-channel-cpp shutdown_open_sl tag 4-end");
 }

@@ -48,6 +48,15 @@ inline void logd(const char* tag, const char* format, ...) {
     }
 }
 
+inline void logw(const char* tag, const char* format, ...) {
+    if (g_log_enable) {
+        va_list args;
+        va_start(args, format);
+        __android_log_vprint(ANDROID_LOG_WARN, tag, format, args);
+        va_end(args);
+    }
+}
+
 inline void loge(const char* tag, const char* format, ...) {
     if (g_log_enable) {
         va_list args;
@@ -61,6 +70,7 @@ inline void loge(const char* tag, const char* format, ...) {
 #define LOGV(...) logv(LOGV_TAG, __VA_ARGS__)
 #define LOGI(...) logi(LOGI_TAG, __VA_ARGS__)
 #define LOGD(...) logd(LOGD_TAG, __VA_ARGS__)
+#define LOGW(...) logw(LOGE_TAG, __VA_ARGS__)
 #define LOGE(...) loge(LOGE_TAG, __VA_ARGS__)
 
 void set_native_log(bool b);
